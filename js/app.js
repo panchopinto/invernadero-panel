@@ -1,5 +1,8 @@
 
 // Minimal state
+
+const CFG = (window.INVENTARIO_CONFIG)||{categorias:[],umbrales:{_default:5}};
+
 let data = [];
 let auto = false;
 let lastLoaded = null;
@@ -22,7 +25,8 @@ function statusBadge(row){
 }
 
 function refreshFilters(){
-  const cats = [...new Set(data.map(x=>x.categoria).filter(Boolean))].sort();
+  const catsFromData = [...new Set(data.map(x=>x.categoria).filter(Boolean))];
+  const cats = Array.from(new Set([...(CFG.categorias||[]), ...catsFromData])).sort();
   fcat.innerHTML = `<option value="">Todas las categorías</option>` + cats.map(c=>`<option>${c}</option>`).join('');
 
   const ubis = [...new Set(data.map(x=>x.ubicacion).filter(Boolean))].sort();
@@ -49,6 +53,23 @@ function render(){
     const ubiOk = !fubi.value || r.ubicacion===fubi.value;
     return hit && catOk && estOk && ubiOk;
   });
+
+  // Recalcular estado según umbrales si no viene definido o está vacío
+  rows = rows.map(r=>{
+    const qty = parseFloat(r.cantidad)||0;
+    const cat = r.categoria||"";
+    const minimo = r.minimo ? parseFloat(r.minimo) : (CFG.umbrales[cat] ?? CFG.umbrales._default ?? 5);
+    let estado = (r.estado||"").toUpperCase().trim();
+    if (!estado) {
+      if (qty <= 0) estado = "AGOTADO";
+      else if (qty < minimo) estado = "BAJO";
+      else estado = "OK";
+    }
+    r._minimo = minimo;
+    r.estado = estado;
+    return r;
+  });
+
   computeKPIs(rows);
   tabla.innerHTML = rows.map(r=>{
     const vu = parseFloat(r.valor_unitario)||0;
@@ -63,6 +84,7 @@ function render(){
       <td>${r.proveedor||''}</td>
       <td>${vu?CLP(vu):''}</td>
       <td>${vu?CLP(vu*qty):''}</td>
+      <td>${r._minimo??''}</td>
       <td>${statusBadge(r)}</td>
       <td>${r.fecha_ingreso||''}</td>
     </tr>`;
@@ -88,7 +110,7 @@ async function loadCSV(url){
 }
 
 function toCSV(rows){
-  const headers = ["codigo","nombre","categoria","unidad","cantidad","ubicacion","proveedor","fecha_ingreso","valor_unitario","estado","observaciones"];
+  const headers = ["codigo","nombre","categoria","unidad","cantidad","ubicacion","proveedor","fecha_ingreso","valor_unitario","estado","minimo","observaciones"];
   const lines = [headers.join(",")].concat(rows.map(r=>headers.map(h=>(r[h]??"")).join(",")));
   return lines.join("\n");
 }
