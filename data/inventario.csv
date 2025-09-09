@@ -1,17 +1,1 @@
-codigo,nombre,categoria,unidad,cantidad,ubicacion,proveedor,fecha_ingreso,valor_unitario,estado,minimo,observaciones
-R001,"Manguera 1/2"" 20m",Riego,UN,4,Bodega Principal,Ferretería San Nicolás,2025-09-09,12000,,2,Manguera reforzada
-R002,Aspersor metálico,Riego,UN,12,Bodega Principal,AgroRiego Ltda,2025-09-09,3500,,5,
-S001,Saco turba 50L,Sustratos,SACO,8,Invernadero 1,Agroinsumos Ñuble,2025-09-09,8500,,10,Sustrato base
-S002,Perlita expandida 25L,Sustratos,SACO,5,Invernadero 1,Agroinsumos Ñuble,2025-09-09,7000,,5,
-F001,Fertilizante NPK 20-20-20 1kg,Fertilizantes,KG,15,Bodega Principal,FertiChile,2025-09-09,4200,,5,Soluble
-F002,Cal agrícola 25kg,Fertilizantes,SACO,6,Bodega Principal,FertiChile,2025-09-09,6500,,5,
-H001,Pala metálica,Herramientas,UN,3,Bodega Principal,Ferretería San Nicolás,2025-09-09,9500,,2,
-H002,Tijera de podar,Herramientas,UN,7,Bodega Principal,Ferretería San Nicolás,2025-09-09,4500,,2,
-SE001,Semillas lechuga crespa,Semillas,SOBRE,250,Invernadero 1,Semillas del Sur,2025-09-09,550,,100,
-SE002,Semillas tomate cherry,Semillas,SOBRE,120,Invernadero 1,Semillas del Sur,2025-09-09,650,,100,
-SEG001,Guantes de nitrilo,Seguridad,UN,200,Bodega Principal,ProtecSeg,2025-09-09,150,,50,
-SEG002,Mascarillas N95,Seguridad,UN,80,Bodega Principal,ProtecSeg,2025-09-09,1200,,20,
-E001,Cable eléctrico 2x1.5mm rollo 100m,Eléctrico,ROLLO,2,Bodega Principal,ElectroChile,2025-09-09,28000,,1,
-M001,Mesa de cultivo 2m,Mobiliario,UN,5,Invernadero 2,Maderas Ñuble,2025-09-09,35000,,1,Estructura metálica
-M002,Bandeja germinación 128 celdas,Insumos generales,UN,30,Invernadero 1,Agroinsumos Ñuble,2025-09-09,2500,,10,Plástico rígido
-REP001,Bomba de agua repuesto,Repuestos,UN,1,Bodega Principal,AgroRiego Ltda,2025-09-09,45000,,1,Compatibilidad: sistema NFT
+codigo,nombre,categoria,unidad,cantidad,ubicacion,proveedor,fecha_ingreso,valor_unitario,estado,observaciones
