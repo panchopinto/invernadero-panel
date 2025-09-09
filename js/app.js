@@ -98,13 +98,13 @@ function render(){
       <td>${r._minimo??''}</td>
       <td>${statusBadge(r)}</td>
       <td>${r.fecha_ingreso||''}</td>
-      <td>
-        <button class='btn' data-act='edit' data-id='${i}'>${ICONS.edit}</button>
-        <button class='btn' data-act='copy' data-id='${r._idx||0}'>${ICONS.copy}</button>
-        <button class='btn btn-warn' data-act='down' data-id='${r._idx||0}'>${ICONS.down}</button>
-        <button class='btn btn-danger' data-act='del' data-id='${r._idx||0}'>${ICONS.del}</button>
+      <td class='actions-row'>
+        <button class='btn btn-blue' data-act='edit' data-id='${i}'>${ICONS.edit}</button>
+        <button class='btn btn-purple' data-act='copy' data-id='${r._idx||0}'>${ICONS.copy}</button>
+        <button class='btn btn-orange' data-act='down' data-id='${r._idx||0}'>${ICONS.down}</button>
+        <button class='btn btn-red' data-act='del' data-id='${r._idx||0}'>${ICONS.del}</button>
       </td>
-      <td>
+      <td class='actions-row'>
         <button class='btn btn-ok btn-edit' data-id='${r.codigo}'>✏️</button>
         <button class='btn btn-danger btn-del' data-id='${r.codigo}'>🗑️</button>
         <button class='btn btn-warn btn-baja' data-id='${r.codigo}'>⬇️</button>
@@ -311,13 +311,13 @@ document.querySelector("#tabla").addEventListener("click",(e)=>{
   const id = parseInt(btn.getAttribute("data-id"),10);
   const row = data[id];
   if(!row) return;
-  if(act==="del"){
+  if(act==="del"){ addMov({accion:'ELIMINAR', codigo:row.codigo, nombre:row.nombre, categoria:row.categoria, cantidad:row.cantidad});
     if(confirm("¿Eliminar este producto?")){ data.splice(id,1); refreshFilters(); render(); }
-  }else if(act==="down"){
+  }else if(act==="down"){ addMov({accion:'BAJA', codigo:row.codigo, nombre:row.nombre, categoria:row.categoria, cantidad:row.cantidad});
     if(confirm("¿Dar de baja este producto?")){ row.estado="BAJA"; render(); }
-  }else if(act==="edit"){
+  }else if(act==="edit"){ /* log edit on save */
     openModal(row,id);
-  }else if(act==="copy"){
+  }else if(act==="copy"){ addMov({accion:'DUPLICAR', codigo:row.codigo, nombre:row.nombre, categoria:row.categoria, cantidad:row.cantidad});
     const clone = {...row};
     clone.codigo = (row.codigo||"") + "-copy";
     data.unshift(clone);
@@ -365,6 +365,7 @@ function openModal(row=null, idx=null){
   m.estado.value = (row?.estado||"");
   m.fecha.value = row?.fecha_ingreso||today;
   m.obs.value = row?.observaciones||"";
+  setModalDisabled(false);
 }
 function closeModal(){ modal.classList.add("hidden"); }
 document.querySelector("#modalClose").addEventListener("click", closeModal);
@@ -388,8 +389,8 @@ document.querySelector("#modalSave").addEventListener("click",()=>{
     minimo: m.minimo.value.trim(),
     observaciones: m.obs.value.trim()
   };
-  if(editIndex==null){ data.unshift(nuevo); }
-  else { data[editIndex] = nuevo; }
+  if(editIndex==null){ data.unshift(nuevo); addMov({accion:'AGREGAR', codigo:nuevo.codigo, nombre:nuevo.nombre, categoria:nuevo.categoria, cantidad:nuevo.cantidad}); }
+  else { addMov({accion:'EDITAR', codigo:nuevo.codigo, nombre:nuevo.nombre, categoria:nuevo.categoria, cantidad:nuevo.cantidad}); data[editIndex] = nuevo; }
   closeModal();
   refreshFilters(); render();
 });
@@ -501,11 +502,11 @@ render = function(){
       <td>${r._minimo??''}</td>
       <td>${statusBadge(r)}</td>
       <td>${r.fecha_ingreso||''}</td>
-      <td>
-        <button class='btn' data-act='edit' data-id='${r._idx}'>${ICONS.edit}</button>
-        <button class='btn' data-act='copy' data-id='${r._idx}'>${ICONS.copy}</button>
-        <button class='btn btn-warn' data-act='down' data-id='${r._idx}'>${ICONS.down}</button>
-        <button class='btn btn-danger' data-act='del' data-id='${r._idx}'>${ICONS.del}</button>
+      <td class='actions-row'>
+        <button class='btn btn-blue' data-act='edit' data-id='${r._idx}'>${ICONS.edit}</button>
+        <button class='btn btn-purple' data-act='copy' data-id='${r._idx}'>${ICONS.copy}</button>
+        <button class='btn btn-orange' data-act='down' data-id='${r._idx}'>${ICONS.down}</button>
+        <button class='btn btn-red' data-act='del' data-id='${r._idx}'>${ICONS.del}</button>
       </td>
     </tr>`;
   }).join('');
@@ -555,11 +556,12 @@ document.querySelector("#entConfirm").addEventListener("click", ()=>{
     return {id, qty, obs};
   }).filter(x=>x.qty>0);
   if(rows.length===0){ alert("Indica cantidades a entregar (>0)."); return; }
-  // Descontar stock
-  rows.forEach(({id,qty})=>{
+  // Descontar stock y loguear
+  rows.forEach(({id,qty,obs})=>{
     const r = data[id];
     const cur = parseFloat(r.cantidad)||0;
     r.cantidad = Math.max(0, cur - qty);
+    addMov({accion:'ENTREGA', codigo:r.codigo, nombre:r.nombre, categoria:r.categoria, cantidad:qty, docente:eDocente.value, proyecto:eProyecto.value, obs:obs});
   });
   // Build printable
   buildPrintable(rows);
@@ -569,8 +571,11 @@ document.querySelector("#entConfirm").addEventListener("click", ()=>{
   refreshFilters(); render();
 });
 
+
 function buildPrintable(rows){
   const meta = document.querySelector("#printMeta");
+  const pid = 'ENT-' + new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,14) + '-' + Math.random().toString(36).slice(2,6).toUpperCase();
+  document.querySelector("#printId").innerHTML = `<b>ID de Acta:</b> ${pid}`;
   meta.innerHTML = `
     <div><b>Docente/Responsable:</b> ${eDocente.value||"-"}</div>
     <div><b>Curso/Proyecto:</b> ${eProyecto.value||"-"}</div>
@@ -592,12 +597,26 @@ function buildPrintable(rows){
     `);
   });
   document.querySelector("#printObs").textContent = eObs.value||"";
+  // QR
+  const qrDiv = document.querySelector("#qrCode");
+  qrDiv.innerHTML = "";
+  if(window.QRCode){
+    const payload = JSON.stringify({
+      id: pid,
+      docente: eDocente.value||"",
+      proyecto: eProyecto.value||"",
+      fecha: eFecha.value||"",
+      items: rows.map(({id,qty})=>({codigo:data[id].codigo, nombre:data[id].nombre, qty}))
+    });
+    new QRCode(qrDiv, { text: payload, width: 96, height: 96 });
+  }
   // Mostrar área de impresión y disparar print
   document.querySelector("#printable").classList.remove("hidden");
   window.print();
   // Ocultar nuevamente
   document.querySelector("#printable").classList.add("hidden");
 }
+
 
 // Atajo: botón "Generar PDF" solo arma el imprimible sin descontar stock
 document.querySelector("#entImprimir").addEventListener("click", ()=>{
@@ -610,3 +629,55 @@ document.querySelector("#entImprimir").addEventListener("click", ()=>{
   if(rows.length===0){ alert("Indica cantidades a entregar (>0)."); return; }
   buildPrintable(rows);
 });
+
+// ===== HISTORIAL DE MOVIMIENTOS =====
+let MOVS = JSON.parse(localStorage.getItem('movs')||'[]');
+
+function addMov({accion,codigo,nombre,categoria,cantidad,docente,proyecto,obs}){
+  const ts = new Date().toISOString();
+  MOVS.push({fecha_hora:ts,accion,codigo,nombre,categoria,cantidad,docente,proyecto,obs});
+  localStorage.setItem('movs', JSON.stringify(MOVS));
+}
+
+function buildHistTable(){
+  const tbody = document.querySelector("#histTable tbody");
+  if(!tbody) return;
+  tbody.innerHTML = MOVS.map(m=>`
+    <tr>
+      <td>${m.fecha_hora}</td>
+      <td>${m.accion}</td>
+      <td>${m.codigo||""}</td>
+      <td>${m.nombre||""}</td>
+      <td>${m.categoria||""}</td>
+      <td>${m.cantidad??""}</td>
+      <td>${[m.docente||"", m.proyecto||""].filter(Boolean).join(" / ")}</td>
+      <td>${m.obs||""}</td>
+    </tr>
+  `).join('');
+}
+
+function exportHistCSV(){
+  const headers = ["fecha_hora","accion","codigo","nombre","categoria","cantidad","docente","proyecto","obs"];
+  const lines = [headers.join(",")].concat(MOVS.map(r=>headers.map(h=> (r[h]??"").toString().replaceAll(',',';')).join(',')));
+  const csv = lines.join("\n");
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = "movimientos.csv";
+  a.click();
+}
+
+// Open/close historial modal
+const modalH = document.querySelector("#modalHistorial");
+document.querySelector("#btnHistorial").addEventListener("click", ()=>{ buildHistTable(); modalH.classList.remove("hidden"); });
+document.querySelector("#histClose").addEventListener("click", ()=> modalH.classList.add("hidden"));
+document.querySelector("#histOk").addEventListener("click", ()=> modalH.classList.add("hidden"));
+document.querySelector("#histClear").addEventListener("click", ()=>{
+  if(confirm("¿Borrar todo el historial?")){ MOVS = []; localStorage.setItem('movs','[]'); buildHistTable(); }
+});
+document.querySelector("#btnExportHist").addEventListener("click", exportHistCSV);
+
+function setModalDisabled(dis){ /* deshabilitado a pedido del usuario */
+  [m.codigo,m.nombre,m.categoria,m.unidad,m.cantidad,m.minimo,m.ubicacion,m.proveedor,m.valor,m.fecha,m.obs].forEach(inp=> inp.disabled = false);
+  // estado queda editable por si se quiere levantar una BAJA
+}

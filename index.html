@@ -6,6 +6,7 @@
   <title>Dashboard — Inventario Invernadero</title>
   <link rel="stylesheet" href="css/styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
   <div class="topbar">
@@ -23,25 +24,27 @@
 </svg> <span>Inventario Invernadero</span> <span class="badge">Liceo San Nicolás</span></div>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
           <div id="autoSwitch" class="switch"><div class="track"></div><div class="dot"></div><span id="autoLabel">Auto: OFF</span></div>
-          <button id="btnImport" class="btn">
+          <button id="btnImport" class="btn btn-blue">
 <svg class="icon" viewBox="0 0 24 24" fill="none">
   <defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
   <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="url(#g4)" stroke-width="2"/></svg>Importar CSV</button>
-          <button id="btnExport" class="btn btn-accent">
+          <button id="btnExport" class="btn btn-purple">
 <svg class="icon" viewBox="0 0 24 24" fill="none">
   <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>
   <path d="M3 7l9 4 9-4M3 7v10l9 4 9-4V7" stroke="url(#g2)" stroke-width="2"/>
 </svg>Exportar CSV</button>
-          <button id="btnAdd" class="btn btn-ok">
+          <button id="btnAdd" class="btn btn-green">
 <svg class="icon" viewBox="0 0 24 24" fill="none">
 <defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
 <stop offset="0" stop-color="#84cc16"/><stop offset="1" stop-color="#22c55e"/></linearGradient></defs>
 <circle cx="12" cy="12" r="9" stroke="url(#g3)" stroke-width="2"/><path d="M8 10c0-1.5 1.5-2.5 4-2.5s4 1 4 2.5-1.5 2.5-4 2.5-4 1-4 2.5 1.5 2.5 4 2.5 4-1 4-2.5" stroke="url(#g3)" stroke-width="2"/></svg>Añadir ítem</button>
           <input id="fileInput" type="file" accept=".csv" class="hidden"/>
-        <button id="btnBulk" class="btn btn-warn">Carga rápida</button>
-          <button id="btnEntrega" class="btn btn-warn">Asignar / Entrega</button>
+        <button id="btnBulk" class="btn btn-orange">Carga rápida</button>
+          <button id="btnEntrega" class="btn btn-orange">Asignar / Entrega</button>
+          <button id="btnHistorial" class="btn btn-blue">Historial</button>
+          <button id="btnExportHist" class="btn btn-purple">Exportar Historial CSV</button>
           </div>
       </div>
     </div>
@@ -137,7 +140,9 @@
         <div class="modal-footer">
           <button id="modalSave" class="btn btn-ok">Guardar</button>
           <button id="modalCancel" class="btn">Cancelar</button>
-        <button id="btnEntrega" class="btn btn-warn">Asignar / Entrega</button>
+        <button id="btnEntrega" class="btn btn-orange">Asignar / Entrega</button>
+          <button id="btnHistorial" class="btn btn-blue">Historial</button>
+          <button id="btnExportHist" class="btn btn-purple">Exportar Historial CSV</button>
           </div>
       </div>
     </div>
@@ -148,6 +153,8 @@
         <h2>Liceo Bicentenario de Excelencia Polivalente San Nicolás</h2>
         <h3>Acta de Entrega de Insumos — Invernadero</h3>
         <div id="printMeta"></div>
+        <div id="printId"></div>
+        <div id="qrCode" style="margin-top:8px"></div>
       </div>
       <table id="printTable">
         <thead>
@@ -195,6 +202,37 @@
           <button id="entImprimir" class="btn btn-accent">Generar PDF</button>
           <button id="entConfirm" class="btn btn-ok">Confirmar entrega</button>
           <button id="entCancel" class="btn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    
+  
+    <div id="modalHistorial" class="modal hidden">
+      <div class="modal-content" style="max-width:1000px">
+        <div class="modal-header">
+          <h3>Historial de movimientos</h3>
+          <button id="histClose" class="btn">✖</button>
+        </div>
+        <div class="modal-body">
+          <table id="histTable">
+            <thead>
+              <tr>
+                <th>Fecha/Hora</th>
+                <th>Acción</th>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+                <th>Docente/Proyecto</th>
+                <th>Obs.</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button id="histClear" class="btn btn-danger">Limpiar historial</button>
+          <button id="histOk" class="btn btn-ok">Cerrar</button>
         </div>
       </div>
     </div>
