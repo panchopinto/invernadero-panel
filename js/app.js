@@ -1,6 +1,14 @@
 
 // Minimal state
 
+const ICONS = {
+  edit:`<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10-10-4-4L4 16v4zM14 6l4 4" stroke="#60a5fa" stroke-width="2"/></svg>`,
+  del:`<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5h6v2M8 7l1 12h6l1-12" stroke="#ef4444" stroke-width="2"/></svg>`,
+  down:`<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6 12h12M8 12v6h8v-6M12 6v6" stroke="#f59e0b" stroke-width="2"/></svg>`,
+  copy:`<svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M9 9h10v10H9zM5 5h10v10H5z" stroke="#a78bfa" stroke-width="2"/></svg>`
+};
+
+
 const CFG = (window.INVENTARIO_CONFIG)||{categorias:[],umbrales:{_default:5}};
 
 let data = [];
@@ -34,10 +42,11 @@ function refreshFilters(){
 }
 
 function computeKPIs(rows){
-  const totalItems = rows.length;
-  const totalUnits = rows.reduce((a,b)=>a + (parseFloat(b.cantidad)||0),0);
-  const totalValue = rows.reduce((a,b)=>a + ( (parseFloat(b.cantidad)||0) * (parseFloat(b.valor_unitario)||0) ),0);
-  const cats = new Set(rows.map(r=>r.categoria).filter(Boolean)).size;
+  const rowsActivos = rows.filter(r=>(r.estado||'').toUpperCase()!=='BAJA');
+  const totalItems = rowsActivos.length;
+  const totalUnits = rowsActivos.reduce((a,b)=>a + (parseFloat(b.cantidad)||0),0);
+  const totalValue = rowsActivos.reduce((a,b)=>a + ( (parseFloat(b.cantidad)||0) * (parseFloat(b.valor_unitario)||0) ),0);
+  const cats = new Set(rowsActivos.map(r=>r.categoria).filter(Boolean)).size;
   document.querySelector('#k_total').textContent = totalItems;
   document.querySelector('#k_units').textContent = totalUnits.toLocaleString('es-CL');
   document.querySelector('#k_cats').textContent = cats;
@@ -71,7 +80,9 @@ function render(){
   });
 
   computeKPIs(rows);
-  tabla.innerHTML = rows.map(r=>{
+  buildCharts(rows);
+  updateCharts(rows);
+  tabla.innerHTML = rows.map((r,ii)=>{ r._idx = data.indexOf(r);
     const vu = parseFloat(r.valor_unitario)||0;
     const qty = parseFloat(r.cantidad)||0;
     return `<tr>
@@ -87,6 +98,17 @@ function render(){
       <td>${r._minimo??''}</td>
       <td>${statusBadge(r)}</td>
       <td>${r.fecha_ingreso||''}</td>
+      <td>
+        <button class='btn' data-act='edit' data-id='${i}'>${ICONS.edit}</button>
+        <button class='btn' data-act='copy' data-id='${r._idx||0}'>${ICONS.copy}</button>
+        <button class='btn btn-warn' data-act='down' data-id='${r._idx||0}'>${ICONS.down}</button>
+        <button class='btn btn-danger' data-act='del' data-id='${r._idx||0}'>${ICONS.del}</button>
+      </td>
+      <td>
+        <button class='btn btn-ok btn-edit' data-id='${r.codigo}'>✏️</button>
+        <button class='btn btn-danger btn-del' data-id='${r.codigo}'>🗑️</button>
+        <button class='btn btn-warn btn-baja' data-id='${r.codigo}'>⬇️</button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -123,6 +145,7 @@ async function init(){
   }
   refreshFilters();
   render();
+  attachRowEvents();
   lastLoaded = Date.now();
 }
 
@@ -212,3 +235,202 @@ Manguera 1/2";Riego;4;UN;Bodega Principal;Distribuidora X;12000;2`;
   refreshFilters();
   render();
 });
+
+function attachRowEvents(){
+  document.querySelectorAll('.btn-edit').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id;
+      const item=data.find(r=>r.codigo===id);
+      if(!item){alert("No encontrado");return;}
+      const nuevoNombre=prompt("Editar nombre:",item.nombre)||item.nombre;
+      item.nombre=nuevoNombre;
+      render();
+    };
+  });
+  document.querySelectorAll('.btn-del').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id;
+      if(confirm("¿Eliminar este producto?")){
+        data=data.filter(r=>r.codigo!==id);
+        render();
+      }
+    };
+  });
+  document.querySelectorAll('.btn-baja').forEach(btn=>{
+    btn.onclick=()=>{
+      const id=btn.dataset.id;
+      const item=data.find(r=>r.codigo===id);
+      if(item){ item.estado="BAJA"; render(); }
+    };
+  });
+}
+
+let chartCategorias=null, chartStock=null;
+
+function updateCharts(rows){
+  const ctx1=document.getElementById('chartCategorias').getContext('2d');
+  const ctx2=document.getElementById('chartStock').getContext('2d');
+
+  const byCat={};
+  rows.forEach(r=>{
+    const cat=r.categoria||"Otros";
+    byCat[cat]=(byCat[cat]||0)+1;
+  });
+  const labels=Object.keys(byCat);
+  const values=Object.values(byCat);
+
+  if(chartCategorias) chartCategorias.destroy();
+  chartCategorias=new Chart(ctx1,{type:'pie',data:{labels:labels,datasets:[{data:values}]} });
+
+  // stock vs mínimo
+  const byCat2={};
+  rows.forEach(r=>{
+    const cat=r.categoria||"Otros";
+    const qty=parseFloat(r.cantidad)||0;
+    const min=r._minimo||0;
+    if(!byCat2[cat]) byCat2[cat]={qty:0,min:0};
+    byCat2[cat].qty+=qty;
+    byCat2[cat].min+=min;
+  });
+  const labels2=Object.keys(byCat2);
+  const qtys=labels2.map(k=>byCat2[k].qty);
+  const mins=labels2.map(k=>byCat2[k].min);
+  if(chartStock) chartStock.destroy();
+  chartStock=new Chart(ctx2,{type:'bar',
+    data:{labels:labels2,datasets:[{label:'Stock',data:qtys,backgroundColor:'#22c55e'},
+                                   {label:'Mínimo',data:mins,backgroundColor:'#ef4444'}]},
+    options:{responsive:true,scales:{y:{beginAtZero:true}}}
+  });
+}
+
+// Delegación de eventos para acciones
+document.querySelector("#tabla").addEventListener("click",(e)=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  const act = btn.getAttribute("data-act");
+  const id = parseInt(btn.getAttribute("data-id"),10);
+  const row = data[id];
+  if(!row) return;
+  if(act==="del"){
+    if(confirm("¿Eliminar este producto?")){ data.splice(id,1); refreshFilters(); render(); }
+  }else if(act==="down"){
+    if(confirm("¿Dar de baja este producto?")){ row.estado="BAJA"; render(); }
+  }else if(act==="edit"){
+    openModal(row,id);
+  }else if(act==="copy"){
+    const clone = {...row};
+    clone.codigo = (row.codigo||"") + "-copy";
+    data.unshift(clone);
+    refreshFilters(); render();
+  }
+});
+
+// ----- Modal Add/Edit -----
+const modal = document.querySelector("#modalForm");
+const modalTitle = document.querySelector("#modalTitle");
+const m = {
+  codigo: document.querySelector("#m_codigo"),
+  nombre: document.querySelector("#m_nombre"),
+  categoria: document.querySelector("#m_categoria"),
+  unidad: document.querySelector("#m_unidad"),
+  cantidad: document.querySelector("#m_cantidad"),
+  minimo: document.querySelector("#m_minimo"),
+  ubicacion: document.querySelector("#m_ubicacion"),
+  proveedor: document.querySelector("#m_proveedor"),
+  valor: document.querySelector("#m_valor"),
+  estado: document.querySelector("#m_estado"),
+  fecha: document.querySelector("#m_fecha"),
+  obs: document.querySelector("#m_obs")
+};
+let editIndex = null;
+
+function openModal(row=null, idx=null){
+  editIndex = idx;
+  modal.classList.remove("hidden");
+  modalTitle.textContent = row? "Editar ítem" : "Nuevo ítem";
+  const cats = Array.from(new Set([...(CFG.categorias||[]), ...data.map(x=>x.categoria).filter(Boolean)])).sort();
+  const dl = document.querySelector("#catList");
+  dl.innerHTML = cats.map(c=>`<option value="${c}">`).join("");
+
+  const today = new Date().toISOString().slice(0,10);
+  m.codigo.value = row?.codigo||"";
+  m.nombre.value = row?.nombre||"";
+  m.categoria.value = row?.categoria||"";
+  m.unidad.value = row?.unidad||"UN";
+  m.cantidad.value = row?.cantidad||"0";
+  m.minimo.value = row?.minimo||"";
+  m.ubicacion.value = row?.ubicacion||"";
+  m.proveedor.value = row?.proveedor||"";
+  m.valor.value = row?.valor_unitario||row?.valor||"0";
+  m.estado.value = (row?.estado||"");
+  m.fecha.value = row?.fecha_ingreso||today;
+  m.obs.value = row?.observaciones||"";
+}
+function closeModal(){ modal.classList.add("hidden"); }
+document.querySelector("#modalClose").addEventListener("click", closeModal);
+document.querySelector("#modalCancel").addEventListener("click", closeModal);
+
+document.querySelector("#btnAdd").addEventListener("click",()=> openModal());
+
+document.querySelector("#modalSave").addEventListener("click",()=>{
+  if(!m.nombre.value.trim()){ alert("El nombre es obligatorio"); return; }
+  const nuevo = {
+    codigo: m.codigo.value.trim(),
+    nombre: m.nombre.value.trim(),
+    categoria: m.categoria.value.trim(),
+    unidad: m.unidad.value.trim()||"UN",
+    cantidad: m.cantidad.value.trim()||"0",
+    ubicacion: m.ubicacion.value.trim(),
+    proveedor: m.proveedor.value.trim(),
+    fecha_ingreso: m.fecha.value||new Date().toISOString().slice(0,10),
+    valor_unitario: m.valor.value.trim()||"0",
+    estado: m.estado.value.trim(),
+    minimo: m.minimo.value.trim(),
+    observaciones: m.obs.value.trim()
+  };
+  if(editIndex==null){ data.unshift(nuevo); }
+  else { data[editIndex] = nuevo; }
+  closeModal();
+  refreshFilters(); render();
+});
+
+let chartCategorias=null, chartStock=null;
+function buildCharts(rows){
+  const rowsActivos = rows.filter(r=>(r.estado||'').toUpperCase()!=='BAJA');
+  const byCat = {};
+  for(const r of rowsActivos){
+    const cat = r.categoria||"(Sin categoría)";
+    const qty = parseFloat(r.cantidad)||0;
+    const min = (r._minimo!=null)? Number(r._minimo):0;
+    if(!byCat[cat]) byCat[cat] = {items:0, qty:0, min:0};
+    byCat[cat].items += 1;
+    byCat[cat].qty += qty;
+    byCat[cat].min += min;
+  }
+  const labels = Object.keys(byCat);
+  const items = labels.map(k=>byCat[k].items);
+  const qtys = labels.map(k=>byCat[k].qty);
+  const mins = labels.map(k=>byCat[k].min);
+
+  const ctx1 = document.getElementById('chartCategorias');
+  if(ctx1){
+    if(chartCategorias) chartCategorias.destroy();
+    chartCategorias = new Chart(ctx1, {
+      type:'doughnut',
+      data:{ labels, datasets:[{ data: items }] },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+    });
+  }
+  const ctx2 = document.getElementById('chartStock');
+  if(ctx2){
+    if(chartStock) chartStock.destroy();
+    chartStock = new Chart(ctx2, {
+      type:'bar',
+      data:{ labels, datasets:[
+        { label:'Stock', data: qtys },
+        { label:'Mínimo', data: mins }
+      ]},
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ y:{ beginAtZero:true } } }
+    });
+  }
+}

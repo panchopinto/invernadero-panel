@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Dashboard — Inventario Invernadero</title>
   <link rel="stylesheet" href="css/styles.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div class="topbar">
@@ -80,20 +81,67 @@
             <th>Valor Total</th>
             <th>Estado</th>
             <th>F. Ingreso</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </section>
 
-    <footer>
+    <section class="charts" style="margin-top:24px">
+  <h2>Gráficos de Inventario</h2>
+  <canvas id="chartCategorias" height="120"></canvas>
+  <canvas id="chartStock" height="120" style="margin-top:20px"></canvas>
+</section>
+
+  <footer>
       <div>Creado por: Francisco Andrés Pinto Aravena — <a href="mailto:franciscoandresp@gmail.com">franciscoandresp@gmail.com</a></div>
       <div>Este proyecto es desarrollado con propósitos educacionales, motivando el desarrollo, culturización e innovación tecnológica en las aulas.</div>
       <div>© <span class="year"></span> Queda prohibida la copia, redistribución o adaptación de los contenidos, modelos 3D, imágenes y código aquí publicados sin autorización expresa por escrito.</div>
       <div>© Todos los derechos reservados.</div>
     </footer>
+  
+    <div id="modalForm" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modalTitle">Nuevo ítem</h3>
+          <button id="modalClose" class="btn">✖</button>
+        </div>
+        <div class="modal-body">
+          <div class="grid">
+            <label>Código <input id="m_codigo"/></label>
+            <label>Nombre <input id="m_nombre" required/></label>
+            <label>Categoría <input id="m_categoria" list="catList"/></label>
+            <label>Unidad <input id="m_unidad" value="UN"/></label>
+            <label>Cantidad <input id="m_cantidad" type="number" step="any" value="0"/></label>
+            <label>Mínimo <input id="m_minimo" type="number" step="any" placeholder="(opcional)"/></label>
+            <label>Ubicación <input id="m_ubicacion"/></label>
+            <label>Proveedor <input id="m_proveedor"/></label>
+            <label>Valor unitario CLP <input id="m_valor" type="number" step="any" value="0"/></label>
+            <label>Estado
+              <select id="m_estado">
+                <option value="">(auto)</option>
+                <option>OK</option>
+                <option>BAJO</option>
+                <option>AGOTADO</option>
+                <option>BAJA</option>
+              </select>
+            </label>
+            <label>Fecha ingreso <input id="m_fecha" type="date"/></label>
+            <label>Observaciones <input id="m_obs"/></label>
+          </div>
+          <datalist id="catList"></datalist>
+        </div>
+        <div class="modal-footer">
+          <button id="modalSave" class="btn btn-ok">Guardar</button>
+          <button id="modalCancel" class="btn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script defer src="js/config.js"></script>
   <script defer src="js/app.js"></script>
 </body>
