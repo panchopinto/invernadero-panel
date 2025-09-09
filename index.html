@@ -41,6 +41,7 @@
 <circle cx="12" cy="12" r="9" stroke="url(#g3)" stroke-width="2"/><path d="M8 10c0-1.5 1.5-2.5 4-2.5s4 1 4 2.5-1.5 2.5-4 2.5-4 1-4 2.5 1.5 2.5 4 2.5 4-1 4-2.5" stroke="url(#g3)" stroke-width="2"/></svg>Añadir ítem</button>
           <input id="fileInput" type="file" accept=".csv" class="hidden"/>
         <button id="btnBulk" class="btn btn-warn">Carga rápida</button>
+          <button id="btnEntrega" class="btn btn-warn">Asignar / Entrega</button>
           </div>
       </div>
     </div>
@@ -70,6 +71,7 @@
       <table id="tabla">
         <thead>
           <tr>
+            <th>Seleccionar</th>
             <th>Código</th>
             <th>Nombre</th>
             <th>Categoría</th>
@@ -135,6 +137,64 @@
         <div class="modal-footer">
           <button id="modalSave" class="btn btn-ok">Guardar</button>
           <button id="modalCancel" class="btn">Cancelar</button>
+        <button id="btnEntrega" class="btn btn-warn">Asignar / Entrega</button>
+          </div>
+      </div>
+    </div>
+    
+  
+    <div id="printable" class="hidden print-area">
+      <div class="print-header">
+        <h2>Liceo Bicentenario de Excelencia Polivalente San Nicolás</h2>
+        <h3>Acta de Entrega de Insumos — Invernadero</h3>
+        <div id="printMeta"></div>
+      </div>
+      <table id="printTable">
+        <thead>
+          <tr>
+            <th>Código</th><th>Nombre</th><th>Categoría</th><th>Unidad</th><th>Cantidad Entregada</th><th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="print-footer">
+        <p>Condiciones y observaciones:</p>
+        <p id="printObs"></p>
+        <div class="firmas">
+          <div>Entregado por: ____________________________</div>
+          <div>Recibido por: ____________________________</div>
+          <div>Fecha: ____ / ____ / ______</div>
+        </div>
+      </div>
+    </div>
+    
+  
+    <div id="modalEntrega" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Asignar / Entregar insumos</h3>
+          <button id="entClose" class="btn">✖</button>
+        </div>
+        <div class="modal-body">
+          <div class="grid">
+            <label>Docente / Responsable <input id="e_docente" placeholder="Nombre y apellido"/></label>
+            <label>Curso / Proyecto <input id="e_proyecto" placeholder="Ej.: 3° Medio Agro / Hidroponía"/></label>
+            <label>Fecha <input id="e_fecha" type="date"/></label>
+            <label>Observaciones generales <input id="e_obs" placeholder="Condiciones de préstamo/uso"/></label>
+          </div>
+          <div style="margin-top:10px">
+            <table id="entTable">
+              <thead>
+                <tr><th>Ítem</th><th>Stock</th><th>A Entregar</th><th>Obs.</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="entImprimir" class="btn btn-accent">Generar PDF</button>
+          <button id="entConfirm" class="btn btn-ok">Confirmar entrega</button>
+          <button id="entCancel" class="btn">Cancelar</button>
         </div>
       </div>
     </div>

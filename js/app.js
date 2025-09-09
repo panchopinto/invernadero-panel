@@ -434,3 +434,179 @@ function buildCharts(rows){
     });
   }
 }
+
+// ----- SELECCION ENTREGA -----
+const seleccion = new Set();
+
+function renderCheckbox(id){
+  return `<input type="checkbox" class="sel" data-id="${id}">`;
+}
+
+// Hook after table render to attach checkbox events
+function attachRowEvents(){
+  document.querySelectorAll('input.sel').forEach(ch=>{
+    ch.checked = seleccion.has(parseInt(ch.dataset.id,10));
+    ch.addEventListener('change', (e)=>{
+      const idx = parseInt(e.target.dataset.id,10);
+      if(e.target.checked) seleccion.add(idx); else seleccion.delete(idx);
+    });
+  });
+}
+
+// Override render to include checkbox column & call attach
+const _renderOrig = render;
+render = function(){
+  const term = (q.value||'').toLowerCase();
+  let rows = data.filter(r=>{
+    const hit = [r.codigo,r.nombre,r.proveedor].map(x=>String(x||'').toLowerCase()).some(t=>t.includes(term));
+    const catOk = !fcat.value || r.categoria===fcat.value;
+    const estOk = !fest.value || (r.estado||'').toUpperCase()===fest.value;
+    const ubiOk = !fubi.value || r.ubicacion===fubi.value;
+    return hit && catOk && estOk && ubiOk;
+  });
+  // Recalcular estado según umbral
+  rows = rows.map(r=>{
+    const qty = parseFloat(r.cantidad)||0;
+    const cat = r.categoria||"";
+    const minimo = r.minimo ? parseFloat(r.minimo) : (CFG.umbrales[cat] ?? CFG.umbrales._default ?? 5);
+    let estado = (r.estado||"").toUpperCase().trim();
+    if (!estado) {
+      if (qty <= 0) estado = "AGOTADO";
+      else if (qty < minimo) estado = "BAJO";
+      else estado = "OK";
+    }
+    r._minimo = minimo;
+    r.estado = estado;
+    return r;
+  });
+
+  computeKPIs(rows);
+  buildCharts(rows);
+
+  tabla.innerHTML = rows.map((r,ii)=>{
+    r._idx = data.indexOf(r);
+    const vu = parseFloat(r.valor_unitario)||0;
+    const qty = parseFloat(r.cantidad)||0;
+    return `<tr>
+      <td>${renderCheckbox(r._idx)}</td>
+      <td>${r.codigo||''}</td>
+      <td>${r.nombre||''}</td>
+      <td>${r.categoria||''}</td>
+      <td>${r.unidad||''}</td>
+      <td>${qty}</td>
+      <td>${r.ubicacion||''}</td>
+      <td>${r.proveedor||''}</td>
+      <td>${vu?CLP(vu):''}</td>
+      <td>${vu?CLP(vu*qty):''}</td>
+      <td>${r._minimo??''}</td>
+      <td>${statusBadge(r)}</td>
+      <td>${r.fecha_ingreso||''}</td>
+      <td>
+        <button class='btn' data-act='edit' data-id='${r._idx}'>${ICONS.edit}</button>
+        <button class='btn' data-act='copy' data-id='${r._idx}'>${ICONS.copy}</button>
+        <button class='btn btn-warn' data-act='down' data-id='${r._idx}'>${ICONS.down}</button>
+        <button class='btn btn-danger' data-act='del' data-id='${r._idx}'>${ICONS.del}</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  attachRowEvents();
+}
+
+// ----- MODAL ENTREGA -----
+const modalE = document.querySelector("#modalEntrega");
+const eDocente = document.querySelector("#e_docente");
+const eProyecto = document.querySelector("#e_proyecto");
+const eFecha = document.querySelector("#e_fecha");
+const eObs = document.querySelector("#e_obs");
+const entTable = document.querySelector("#entTable tbody");
+
+function openEntrega(){
+  if(seleccion.size===0){ alert("Selecciona al menos un ítem con el checkbox."); return; }
+  modalE.classList.remove("hidden");
+  const today = new Date().toISOString().slice(0,10);
+  eFecha.value = today;
+  // Build rows for selected items
+  entTable.innerHTML = "";
+  [...seleccion].forEach(idx=>{
+    const r = data[idx];
+    const stock = parseFloat(r.cantidad)||0;
+    entTable.insertAdjacentHTML('beforeend', `
+      <tr data-id="${idx}">
+        <td>${r.nombre}</td>
+        <td>${stock}</td>
+        <td><input type="number" min="0" max="${stock}" step="any" value="0" class="entQty" style="width:100px"/></td>
+        <td><input type="text" class="entObs" placeholder="(opcional)"/></td>
+      </tr>
+    `);
+  });
+}
+function closeEntrega(){ modalE.classList.add("hidden"); }
+document.querySelector("#entClose").addEventListener("click", closeEntrega);
+document.querySelector("#entCancel").addEventListener("click", closeEntrega);
+document.querySelector("#btnEntrega").addEventListener("click", openEntrega);
+
+// Confirmar: descuenta stock y prepara imprimible
+document.querySelector("#entConfirm").addEventListener("click", ()=>{
+  const rows = [...entTable.querySelectorAll('tr')].map(tr=>{
+    const id = parseInt(tr.dataset.id,10);
+    const qty = parseFloat(tr.querySelector('.entQty').value)||0;
+    const obs = tr.querySelector('.entObs').value||"";
+    return {id, qty, obs};
+  }).filter(x=>x.qty>0);
+  if(rows.length===0){ alert("Indica cantidades a entregar (>0)."); return; }
+  // Descontar stock
+  rows.forEach(({id,qty})=>{
+    const r = data[id];
+    const cur = parseFloat(r.cantidad)||0;
+    r.cantidad = Math.max(0, cur - qty);
+  });
+  // Build printable
+  buildPrintable(rows);
+  // Reset selección y cerrar modal
+  seleccion.clear();
+  closeEntrega();
+  refreshFilters(); render();
+});
+
+function buildPrintable(rows){
+  const meta = document.querySelector("#printMeta");
+  meta.innerHTML = `
+    <div><b>Docente/Responsable:</b> ${eDocente.value||"-"}</div>
+    <div><b>Curso/Proyecto:</b> ${eProyecto.value||"-"}</div>
+    <div><b>Fecha:</b> ${eFecha.value||"-"}</div>
+  `;
+  const tbody = document.querySelector("#printTable tbody");
+  tbody.innerHTML = "";
+  rows.forEach(({id,qty,obs})=>{
+    const r = data[id];
+    tbody.insertAdjacentHTML('beforeend',`
+      <tr>
+        <td>${r.codigo||""}</td>
+        <td>${r.nombre||""}</td>
+        <td>${r.categoria||""}</td>
+        <td>${r.unidad||""}</td>
+        <td>${qty}</td>
+        <td>${obs||""}</td>
+      </tr>
+    `);
+  });
+  document.querySelector("#printObs").textContent = eObs.value||"";
+  // Mostrar área de impresión y disparar print
+  document.querySelector("#printable").classList.remove("hidden");
+  window.print();
+  // Ocultar nuevamente
+  document.querySelector("#printable").classList.add("hidden");
+}
+
+// Atajo: botón "Generar PDF" solo arma el imprimible sin descontar stock
+document.querySelector("#entImprimir").addEventListener("click", ()=>{
+  const rows = [...entTable.querySelectorAll('tr')].map(tr=>{
+    const id = parseInt(tr.dataset.id,10);
+    const qty = parseFloat(tr.querySelector('.entQty').value)||0;
+    const obs = tr.querySelector('.entObs').value||"";
+    return {id, qty, obs};
+  }).filter(x=>x.qty>0);
+  if(rows.length===0){ alert("Indica cantidades a entregar (>0)."); return; }
+  buildPrintable(rows);
+});
