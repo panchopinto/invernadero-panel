@@ -182,3 +182,33 @@ autoSwitch.addEventListener('click',()=>{
 });
 
 document.querySelector('.year').textContent = new Date().getFullYear();
+
+document.querySelector('#btnBulk').addEventListener('click',()=>{
+  const help = `Pega líneas con formato:
+nombre;categoria;cantidad;unidad;ubicacion;proveedor;valor_unitario;minimo
+
+Ejemplo:
+Manguera 1/2";Riego;4;UN;Bodega Principal;Distribuidora X;12000;2`;
+  const txt = prompt(help, "");
+  if(!txt) return;
+  const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  for(const line of lines){
+    const [nombre,categoria,cantidad,unidad,ubicacion,proveedor,valor_unitario,minimo] = line.split(';');
+    data.unshift({
+      codigo:"",
+      nombre: nombre||"",
+      categoria: categoria||"",
+      unidad: unidad||"UN",
+      cantidad: cantidad||"0",
+      ubicacion: ubicacion||"",
+      proveedor: proveedor||"",
+      fecha_ingreso: new Date().toISOString().slice(0,10),
+      valor_unitario: valor_unitario||"0",
+      estado:"",
+      minimo: minimo||"" ,
+      observaciones:""
+    });
+  }
+  refreshFilters();
+  render();
+});
