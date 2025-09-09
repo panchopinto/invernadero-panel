@@ -1,22 +1,25 @@
-# Invernadero Panel — Profesores/Cursos/Proyectos
+# Invernadero Panel — Profesores/Cursos/Proyectos + Asignaciones
 
-Este paquete añade **asignación de Profesor, Curso y Proyecto** a cada ítem del inventario,
-incluye filtros y búsqueda por esos campos, y mantiene la compatibilidad de **Importar/Exportar CSV**.
+Este paquete añade:
+- **Campos** Profesor, Curso y Proyecto en ítems.
+- **Módulo de Asignaciones/Movimientos**: Consumo/Salida (resta stock), Devolución/Entrada (suma stock) y Reserva (no afecta stock).
+- **Lista de asignaciones** con búsqueda y **Exportar CSV**.
+- **Botones multicolor con íconos** estilo portafolio unificado.
+- Todo corre con `localStorage` (sin bloquear el ingreso de ítems).
 
-## Archivos
-- `index.html` — UI con botones multicolor y modal de edición.
-- `css/styles.css` — Estilos (tema oscuro, botones con gradientes).
-- `js/app.js` — Lógica con `localStorage`.
-
-## CSV
-Se agregan nuevas columnas: `profesor, curso, proyecto`.
-El export incluye el siguiente encabezado:
+## CSV Ítems
+Encabezado:
 ```
 codigo,nombre,categoria,profesor,curso,proyecto,unidad,cantidad,ubicacion,proveedor,valorUnitario,estado,fecha,obs
 ```
 
-## Cómo usar
-1. Abre `index.html` en el navegador o súbelo a GitHub Pages.
-2. Usa **Añadir ítem** para crear registros con profesor/curso/proyecto.
-3. Filtra y busca por cualquiera de esos campos.
-4. Importa CSV con el encabezado anterior para cargar datos existentes.
+## CSV Asignaciones
+Encabezado:
+```
+fecha,tipo,codigo,nombre,cantidad,profesor,curso,proyecto,obs,afecta
+```
+
+## Uso
+1. `Añadir ítem` para crear o editar productos/insumos.
+2. Botón **Asignaciones** (o el icono 🔗 por fila) para registrar movimientos.
+3. En el modal de movimientos puedes ver la **lista** y exportar CSV.

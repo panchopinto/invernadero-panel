@@ -84,6 +84,22 @@
       </span>
       Añadir ítem
     </button>
+
+    <button id="movBtn" class="btn btn-cyan">
+      <span class="i i-cyan">
+        <svg class="i-grad" viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="g-cyan" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#26c6da"/>
+              <stop offset="100%" stop-color="#00acc1"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#g-cyan)"
+            d="M5 4h14v2H5V4Zm0 7h14v2H5v-2Zm0 7h14v2H5v-2Z"/>
+        </svg>
+      </span>
+      Asignaciones
+    </button>
   </nav>
 </header>
 
@@ -152,7 +168,7 @@
   <div>© Todos los derechos reservados.</div>
 </footer>
 
-<!-- Modal -->
+<!-- Modal Ítem -->
 <dialog id="itemModal">
   <form id="itemForm" method="dialog">
     <h3 id="modalTitle">Nuevo Ítem</h3>
@@ -194,6 +210,68 @@
   </form>
 </dialog>
 
+<!-- Modal Movimientos / Asignaciones -->
+<dialog id="movModal">
+  <form id="movForm" method="dialog">
+    <h3>Asignación / Movimiento</h3>
+    <div class="grid">
+      <label>Fecha <input name="fecha" type="datetime-local"></label>
+      <label>Tipo
+        <select name="tipo">
+          <option value="Consumo/Salida">Consumo/Salida</option>
+          <option value="Devolución/Entrada">Devolución/Entrada</option>
+          <option value="Reserva">Reserva (no afecta stock)</option>
+        </select>
+      </label>
+      <label>Afecta Stock <input name="afecta" type="checkbox" checked></label>
+
+      <label>Código Ítem <input name="codigo" list="codList" required></label>
+      <label>Nombre Ítem <input name="nombre" readonly placeholder="Se completa por código"></label>
+      <label>Cantidad <input name="cantidad" type="number" min="0" step="any" value="1"></label>
+
+      <label>Profesor <input name="profesor" placeholder="Ej: Macarena Álvarez"></label>
+      <label>Curso <input name="curso" placeholder="Ej: 3°A"></label>
+      <label>Proyecto <input name="proyecto" placeholder="Ej: SIAMP"></label>
+    </div>
+
+    <label>Observaciones
+      <textarea name="obs" rows="3" placeholder="Notas, detalle de uso, etc."></textarea>
+    </label>
+
+    <menu>
+      <button type="button" class="btn ghost" id="movListBtn">Ver asignaciones</button>
+      <span style="flex:1"></span>
+      <button type="reset" class="btn ghost" id="movCancel">Cancelar</button>
+      <button type="submit" class="btn btn-cyan">Guardar asignación</button>
+    </menu>
+
+    <datalist id="codList"></datalist>
+  </form>
+</dialog>
+
+<!-- Modal Lista de Movimientos -->
+<dialog id="movListModal">
+  <div class="mov-header">
+    <h3>Asignaciones registradas</h3>
+    <div class="mov-actions">
+      <input id="movSearch" class="input" placeholder="Buscar por profesor, curso, proyecto o código..."/>
+      <button id="movExport" class="btn btn-orange">Exportar CSV</button>
+      <button id="movClose" class="btn ghost">Cerrar</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Tipo</th><th>Código</th><th>Nombre</th>
+          <th>Cant.</th><th>Profesor</th><th>Curso</th><th>Proyecto</th><th>Obs</th>
+        </tr>
+      </thead>
+      <tbody id="movTbody"></tbody>
+    </table>
+  </div>
+</dialog>
+
 <template id="rowActions">
   <div class="row-actions">
     <button class="icon ghost" data-action="edit" title="Editar">
@@ -201,6 +279,9 @@
     </button>
     <button class="icon ghost" data-action="delete" title="Eliminar">
       🗑️
+    </button>
+    <button class="icon ghost" data-action="asignar" title="Asignar / movimiento">
+      🔗
     </button>
   </div>
 </template>
