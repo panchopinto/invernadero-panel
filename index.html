@@ -3,97 +3,207 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Dashboard — Inventario Invernadero</title>
+  <title>Inventario Invernadero — Liceo San Nicolás</title>
   <link rel="stylesheet" href="css/styles.css"/>
+  <script defer src="js/app.js"></script>
 </head>
 <body>
-  <div class="topbar">
-    <div class="container">
-      <div class="row">
-        <div class="logo">
-<svg class="icon" viewBox="0 0 24 24" fill="none">
-  <defs>
-    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#22c55e"/>
-      <stop offset="1" stop-color="#06b6d4"/>
-    </linearGradient>
-  </defs>
-  <path d="M3 21h18M5 21V8l4-2 4 2v13M13 21V11h4v10" stroke="url(#g1)" stroke-width="2" />
-</svg> <span>Inventario Invernadero</span> <span class="badge">Liceo San Nicolás</span></div>
-        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <div id="autoSwitch" class="switch"><div class="track"></div><div class="dot"></div><span id="autoLabel">Auto: OFF</span></div>
-          <button id="btnImport" class="btn">
-<svg class="icon" viewBox="0 0 24 24" fill="none">
-  <defs><linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient></defs>
-  <path d="M12 16V4m0 0l-4 4m4-4l4 4M4 20h16" stroke="url(#g4)" stroke-width="2"/></svg>Importar CSV</button>
-          <button id="btnExport" class="btn btn-accent">
-<svg class="icon" viewBox="0 0 24 24" fill="none">
-  <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs>
-  <path d="M3 7l9 4 9-4M3 7v10l9 4 9-4V7" stroke="url(#g2)" stroke-width="2"/>
-</svg>Exportar CSV</button>
-          <button id="btnAdd" class="btn btn-ok">
-<svg class="icon" viewBox="0 0 24 24" fill="none">
-<defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
-<stop offset="0" stop-color="#84cc16"/><stop offset="1" stop-color="#22c55e"/></linearGradient></defs>
-<circle cx="12" cy="12" r="9" stroke="url(#g3)" stroke-width="2"/><path d="M8 10c0-1.5 1.5-2.5 4-2.5s4 1 4 2.5-1.5 2.5-4 2.5-4 1-4 2.5 1.5 2.5 4 2.5 4-1 4-2.5" stroke="url(#g3)" stroke-width="2"/></svg>Añadir ítem</button>
-          <input id="fileInput" type="file" accept=".csv" class="hidden"/>
-        </div>
-      </div>
-    </div>
+<header class="topbar">
+  <div class="brand">
+    <span class="i i-green">
+      <svg class="i-grad" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="g-green" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#00e676"/>
+            <stop offset="100%" stop-color="#00bfa5"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#g-green)"
+          d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm1 14h-2v-2h2v2Zm0-4h-2V6h2v6Z"/>
+      </svg>
+    </span>
+    <strong>Inventario Invernadero</strong>
+    <span class="tag">Liceo San Nicolás</span>
   </div>
 
-  <main class="container">
-    <section class="kpis">
-      <div class="card"><h3>Total ítems</h3><div class="value" id="k_total">0</div></div>
-      <div class="card"><h3>Unidades</h3><div class="value" id="k_units">0</div></div>
-      <div class="card"><h3>Categorías</h3><div class="value" id="k_cats">0</div></div>
-      <div class="card"><h3>Valor inventario (CLP)</h3><div class="value" id="k_value">$0</div></div>
-    </section>
+  <nav class="actions">
+    <button id="autoBtn" class="btn btn-switch" title="Auto actualizar">
+      <span class="i i-blue">
+        <svg class="i-grad" viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="g-blue" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#42a5f5"/>
+              <stop offset="100%" stop-color="#1e88e5"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#g-blue)"
+            d="M12 6v3l4-4-4-4v3C7.58 4 4 7.58 4 12s3.58 8 8 8a8 8 0 0 0 7.75-6h-2.07A6 6 0 1 1 12 6Z"/>
+        </svg>
+      </span>
+      <span class="switch-label">Auto: <b id="autoState">OFF</b></span>
+    </button>
 
-    <section class="controls">
-      <input id="q" placeholder="Buscar por nombre, código o proveedor…" />
-      <select id="f_categoria"><option value="">Todas las categorías</option></select>
-      <select id="f_estado">
-        <option value="">Todos los estados</option>
-        <option value="OK">OK</option>
-        <option value="BAJO">Stock bajo</option>
-        <option value="AGOTADO">Agotado</option>
-      </select>
-      <select id="f_ubicacion"><option value="">Todas las ubicaciones</option></select>
-    </section>
+    <button id="importBtn" class="btn btn-purple">
+      <span class="i i-purple">
+        <svg class="i-grad" viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="g-purple" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#a78bfa"/>
+              <stop offset="100%" stop-color="#7c4dff"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#g-purple)"
+            d="M19 9h-4V3H9v6H5l7 7 7-7ZM5 18v2h14v-2H5Z"/>
+        </svg>
+      </span>
+      Importar CSV
+      <input id="fileInput" type="file" accept=".csv" hidden>
+    </button>
 
-    <section class="table-wrap">
-      <table id="tabla">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Categoría</th>
-            <th>Unidad</th>
-            <th>Cantidad</th>
-            <th>Ubicación</th>
-            <th>Proveedor</th>
-            <th>Valor Unitario</th>
-            <th>Valor Total</th>
-            <th>Estado</th>
-            <th>F. Ingreso</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+    <button id="exportBtn" class="btn btn-orange">
+      <span class="i i-orange">
+        <svg class="i-grad" viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="g-orange" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffb74d"/>
+              <stop offset="100%" stop-color="#fb8c00"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#g-orange)"
+            d="M5 20h14v-2H5v2Zm7-16-7 7h4v6h6v-6h4l-7-7Z"/>
+        </svg>
+      </span>
+      Exportar CSV
+    </button>
 
-    <footer>
-      <div>Creado por: Francisco Andrés Pinto Aravena — <a href="mailto:franciscoandresp@gmail.com">franciscoandresp@gmail.com</a></div>
-      <div>Este proyecto es desarrollado con propósitos educacionales, motivando el desarrollo, culturización e innovación tecnológica en las aulas.</div>
-      <div>© <span class="year"></span> Queda prohibida la copia, redistribución o adaptación de los contenidos, modelos 3D, imágenes y código aquí publicados sin autorización expresa por escrito.</div>
-      <div>© Todos los derechos reservados.</div>
-    </footer>
-  </main>
+    <button id="addBtn" class="btn btn-green">
+      <span class="i i-green">
+        <svg class="i-grad" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#plus24"></use>
+        </svg>
+      </span>
+      Añadir ítem
+    </button>
+  </nav>
+</header>
 
-  <script defer src="js/config.js"></script>
-  <script defer src="js/app.js"></script>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="plus24" viewBox="0 0 24 24">
+    <defs>
+      <linearGradient id="g-lime" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#69f0ae"/>
+        <stop offset="100%" stop-color="#00e676"/>
+      </linearGradient>
+    </defs>
+    <path fill="url(#g-lime)" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6Z"/>
+  </symbol>
+</svg>
+
+<main class="wrap">
+  <section class="kpis">
+    <div class="kpi"><div class="kpi-h">Total ítems</div><div class="kpi-v" id="k_totalItems">0</div></div>
+    <div class="kpi"><div class="kpi-h">Unidades</div><div class="kpi-v" id="k_unidades">0</div></div>
+    <div class="kpi"><div class="kpi-h">Categorías</div><div class="kpi-v" id="k_categorias">0</div></div>
+    <div class="kpi"><div class="kpi-h">Valor inventario (CLP)</div><div class="kpi-v" id="k_valor">$0</div></div>
+  </section>
+
+  <section class="filters">
+    <input id="searchInput" class="input" placeholder="Buscar por nombre, código, profesor, curso o proyecto..."/>
+    <select id="catFilter" class="input"></select>
+    <select id="estadoFilter" class="input">
+      <option value="">Todos los estados</option>
+      <option value="Nuevo">Nuevo</option>
+      <option value="Usado">Usado</option>
+      <option value="Dañado">Dañado</option>
+    </select>
+    <select id="ubicFilter" class="input"></select>
+  </section>
+
+  <section class="table-wrap">
+    <table class="table" id="itemsTable">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Profesor</th>
+          <th>Curso</th>
+          <th>Proyecto</th>
+          <th>Unidad</th>
+          <th>Cantidad</th>
+          <th>Ubicación</th>
+          <th>Proveedor</th>
+          <th>Valor Unitario</th>
+          <th>Valor Total</th>
+          <th>Estado</th>
+          <th>F. Ingreso</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </section>
+</main>
+
+<footer>
+  <div>Creado por: Francisco Andrés Pinto Aravena — <a href="mailto:franciscoandresp@gmail.com">franciscoandresp@gmail.com</a></div>
+  <div>Este proyecto es desarrollado con propósitos educacionales, motivando el desarrollo, culturización e innovación tecnológica en las aulas.</div>
+  <div>© <span class="year"></span> Queda prohibida la copia, redistribución o adaptación de los contenidos, modelos 3D, imágenes y código aquí publicados sin autorización expresa por escrito.</div>
+  <div>© Todos los derechos reservados.</div>
+</footer>
+
+<!-- Modal -->
+<dialog id="itemModal">
+  <form id="itemForm" method="dialog">
+    <h3 id="modalTitle">Nuevo Ítem</h3>
+    <div class="grid">
+      <label>Código <input name="codigo" required></label>
+      <label>Nombre <input name="nombre" required></label>
+      <label>Categoría <input name="categoria" list="catList"></label>
+      <label>Unidad <input name="unidad" placeholder="pza, caja, kg"></label>
+      <label>Cantidad <input name="cantidad" type="number" min="0" step="any" value="1"></label>
+      <label>Ubicación <input name="ubicacion" list="ubicList"></label>
+      <label>Proveedor <input name="proveedor"></label>
+      <label>Valor unitario (CLP) <input name="valorUnitario" type="number" min="0" step="any"></label>
+      <label>Estado
+        <select name="estado">
+          <option value="Nuevo">Nuevo</option>
+          <option value="Usado">Usado</option>
+          <option value="Dañado">Dañado</option>
+        </select>
+      </label>
+      <label>F. Ingreso <input name="fecha" type="date"></label>
+
+      <!-- NUEVOS CAMPOS -->
+      <label>Profesor responsable <input name="profesor" placeholder="Ej: Macarena Álvarez"></label>
+      <label>Curso <input name="curso" placeholder="Ej: 3°A, 2°TP"></label>
+      <label>Proyecto <input name="proyecto" placeholder="Ej: SIAMP, Ver con las Manos"></label>
+    </div>
+
+    <label>Observaciones
+      <textarea name="obs" rows="3" placeholder="Notas, especificaciones, etc."></textarea>
+    </label>
+
+    <menu>
+      <button type="reset" class="btn ghost" id="cancelBtn">Cancelar</button>
+      <button type="submit" class="btn btn-green">Guardar</button>
+    </menu>
+
+    <datalist id="catList"></datalist>
+    <datalist id="ubicList"></datalist>
+  </form>
+</dialog>
+
+<template id="rowActions">
+  <div class="row-actions">
+    <button class="icon ghost" data-action="edit" title="Editar">
+      ✏️
+    </button>
+    <button class="icon ghost" data-action="delete" title="Eliminar">
+      🗑️
+    </button>
+  </div>
+</template>
+
 </body>
 </html>
