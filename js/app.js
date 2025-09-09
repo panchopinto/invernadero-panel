@@ -346,7 +346,7 @@ let editIndex = null;
 
 function openModal(row=null, idx=null){
   editIndex = idx;
-  closeAllModals(); modal.classList.remove("hidden"); (m.nombre||{}).focus && m.nombre.focus();
+  closeAllModals(); openModalById("#modalForm"); (m.nombre||{}).focus && m.nombre.focus();
   modalTitle.textContent = row? "Editar ítem" : "Nuevo ítem";
   const cats = Array.from(new Set([...(CFG.categorias||[]), ...data.map(x=>x.categoria).filter(Boolean)])).sort();
   const dl = document.querySelector("#catList");
@@ -524,7 +524,7 @@ const entTable = document.querySelector("#entTable tbody");
 
 function openEntrega(){
   if(seleccion.size===0){ alert("Selecciona al menos un ítem con el checkbox."); return; }
-  closeAllModals(); modalE.classList.remove("hidden");
+  closeAllModals(); openModalById("#modalEntrega");
   const today = new Date().toISOString().slice(0,10);
   eFecha.value = today;
   // Build rows for selected items
@@ -669,7 +669,7 @@ function exportHistCSV(){
 
 // Open/close historial modal
 const modalH = document.querySelector("#modalHistorial");
-document.querySelector("#btnHistorial").addEventListener("click", ()=>{ closeAllModals(); buildHistTable(); modalH.classList.remove("hidden"); });
+document.querySelector("#btnHistorial").addEventListener("click", ()=>{ closeAllModals(); buildHistTable(); openModalById("#modalHistorial"); });
 document.querySelector("#histClose").addEventListener("click", ()=> modalH.classList.add("hidden"));
 document.querySelector("#histOk").addEventListener("click", ()=> modalH.classList.add("hidden"));
 document.querySelector("#histClear").addEventListener("click", ()=>{
@@ -694,3 +694,10 @@ document.addEventListener('click',(e)=>{
   const wrapper = e.target.classList?.contains('modal');
   if(wrapper && !modal){ closeAllModals(); }
 });
+
+// ---- Strict Modal Manager ----
+function openModalById(id){
+  closeAllModals();
+  const el = document.querySelector(id);
+  if(el){ el.classList.remove('hidden'); }
+}
