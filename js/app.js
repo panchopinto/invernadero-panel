@@ -346,7 +346,7 @@ let editIndex = null;
 
 function openModal(row=null, idx=null){
   editIndex = idx;
-  modal.classList.remove("hidden");
+  closeAllModals(); modal.classList.remove("hidden"); (m.nombre||{}).focus && m.nombre.focus();
   modalTitle.textContent = row? "Editar ítem" : "Nuevo ítem";
   const cats = Array.from(new Set([...(CFG.categorias||[]), ...data.map(x=>x.categoria).filter(Boolean)])).sort();
   const dl = document.querySelector("#catList");
@@ -524,7 +524,7 @@ const entTable = document.querySelector("#entTable tbody");
 
 function openEntrega(){
   if(seleccion.size===0){ alert("Selecciona al menos un ítem con el checkbox."); return; }
-  modalE.classList.remove("hidden");
+  closeAllModals(); modalE.classList.remove("hidden");
   const today = new Date().toISOString().slice(0,10);
   eFecha.value = today;
   // Build rows for selected items
@@ -669,7 +669,7 @@ function exportHistCSV(){
 
 // Open/close historial modal
 const modalH = document.querySelector("#modalHistorial");
-document.querySelector("#btnHistorial").addEventListener("click", ()=>{ buildHistTable(); modalH.classList.remove("hidden"); });
+document.querySelector("#btnHistorial").addEventListener("click", ()=>{ closeAllModals(); buildHistTable(); modalH.classList.remove("hidden"); });
 document.querySelector("#histClose").addEventListener("click", ()=> modalH.classList.add("hidden"));
 document.querySelector("#histOk").addEventListener("click", ()=> modalH.classList.add("hidden"));
 document.querySelector("#histClear").addEventListener("click", ()=>{
@@ -681,3 +681,16 @@ function setModalDisabled(dis){ /* deshabilitado a pedido del usuario */
   [m.codigo,m.nombre,m.categoria,m.unidad,m.cantidad,m.minimo,m.ubicacion,m.proveedor,m.valor,m.fecha,m.obs].forEach(inp=> inp.disabled = false);
   // estado queda editable por si se quiere levantar una BAJA
 }
+
+function closeAllModals(){
+  document.querySelectorAll('.modal').forEach(m=> m.classList.add('hidden'));
+}
+document.addEventListener('keydown',(e)=>{
+  if(e.key === 'Escape'){ closeAllModals(); }
+});
+// Cerrar al hacer click fuera del cuadro
+document.addEventListener('click',(e)=>{
+  const modal = e.target.closest('.modal-content');
+  const wrapper = e.target.classList?.contains('modal');
+  if(wrapper && !modal){ closeAllModals(); }
+});

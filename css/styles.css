@@ -61,7 +61,7 @@ footer{margin:24px 0;color:#9aa4b2;font-size:12px;text-align:center;display:grid
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:50}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:60}
 .modal-content{background:var(--panel);border:1px solid var(--border);border-radius:16px;max-width:800px;width:95%;padding:12px}
 .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .modal-body .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
